@@ -2,7 +2,7 @@
   "name": "macro-prep",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://github.com/Zain-Agha/MacroPrep", 
+  "homepage": "https://Zain-Agha.github.io/MacroPrep/",
   "type": "module",
   "scripts": {
     "dev": "vite",
