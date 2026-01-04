@@ -4,6 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // ⚠️ CRITICAL: Replace 'MacroPrep' below with your EXACT GitHub Repository name.
+  // If your repo is named 'macro-prep', this must be '/macro-prep/'
+  base: './', 
   plugins: [
     react(),
     VitePWA({
