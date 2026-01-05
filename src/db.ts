@@ -169,6 +169,24 @@ export async function seedDatabase() {
       { name: 'Soy Sauce', calories: 53, protein: 8, carbs: 5, fat: 0, category: 'other', measure: 'ml' },
       { name: 'Mayonnaise', calories: 680, protein: 1, carbs: 1, fat: 75, category: 'fat', measure: 'g' },
       { name: 'Ketchup', calories: 111, protein: 1, carbs: 26, fat: 0, category: 'carb', measure: 'g' },
+
+      // --- SUPPLEMENTS & POWDERS ---
+      { name: 'Whey Protein (Standard)', calories: 390, protein: 78, carbs: 6, fat: 6, category: 'protein', measure: 'g' },
+      { name: 'Whey Isolate', calories: 370, protein: 90, carbs: 1, fat: 1, category: 'protein', measure: 'g' },
+      { name: 'Casein Protein', calories: 360, protein: 75, carbs: 4, fat: 2, category: 'protein', measure: 'g' },
+      { name: 'Pea Protein (Vegan)', calories: 380, protein: 75, carbs: 3, fat: 6, category: 'protein', measure: 'g' },
+      { name: 'Creatine Monohydrate', calories: 0, protein: 0, carbs: 0, fat: 0, category: 'other', measure: 'g' },
+
+      // --- NUTS & DRY FRUITS ---
+      { name: 'Almonds (Raw)', calories: 579, protein: 21, carbs: 22, fat: 50, category: 'fat', measure: 'g' },
+      { name: 'Walnuts', calories: 654, protein: 15, carbs: 14, fat: 65, category: 'fat', measure: 'g' },
+      { name: 'Pistachios', calories: 560, protein: 20, carbs: 28, fat: 45, category: 'fat', measure: 'g' },
+      { name: 'Cashews', calories: 553, protein: 18, carbs: 30, fat: 44, category: 'fat', measure: 'g' },
+      { name: 'Peanuts', calories: 567, protein: 26, carbs: 16, fat: 49, category: 'fat', measure: 'g' },
+      { name: 'Pumpkin Seeds', calories: 559, protein: 30, carbs: 10, fat: 49, category: 'fat', measure: 'g' },
+      { name: 'Chia Seeds', calories: 486, protein: 17, carbs: 42, fat: 31, category: 'fat', measure: 'g' },
+      { name: 'Dates (Medjool)', calories: 277, protein: 1.8, carbs: 75, fat: 0.2, category: 'carb', measure: 'unit', unitWeight: 24 },
+      { name: 'Raisins', calories: 299, protein: 3, carbs: 79, fat: 0.5, category: 'carb', measure: 'g' },
     ]);
   }
 }
