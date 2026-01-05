@@ -5,7 +5,7 @@ import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { 
   Search, Plus, ChefHat, ArrowLeft, Trash2, Edit2, 
   Flame, Calculator, CheckCircle, Save, Package, Droplets, BookOpen, X,
-  Target, Utensils
+  Target, Utensils, AlertCircle
 } from "lucide-react";
 
 interface PotItem {
@@ -170,11 +170,32 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
     onBack();
   };
 
+  // --- VALIDATION LOGIC ---
+  const checkLimits = () => {
+    const val = Number(targetValue);
+    if (!val) return null;
+
+    if (distMode === 'scale') {
+      // Input > Total Weight
+      if (val > cookedWeightNum) return { type: 'weight', max: cookedWeightNum };
+    } else {
+      // Input > Total Protein
+      if (val > totalProt) return { type: 'prot', max: Math.round(totalProt) };
+    }
+    return null;
+  };
+
+  const limitError = checkLimits();
+
   const getWizardResults = () => {
     const val = Number(targetValue);
     if (!val) return { weight: 0, cals: 0, prot: 0, carb: 0, fat: 0 };
+    
+    // If input is invalid/over limit, we can clamp it or just use it (the button will be disabled anyway)
+    // Here we calculate normally so the user sees the insane numbers they are asking for
     const w = distMode === 'goal' ? Math.round((val / totalProt) * cookedWeightNum) : val;
     const ratio = w / (cookedWeightNum || 1);
+    
     return {
       weight: w,
       cals: Math.round(totalCals * ratio),
@@ -187,7 +208,7 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
   const res = getWizardResults();
 
   const logToDiary = async () => {
-    if (res.weight <= 0) return;
+    if (res.weight <= 0 || limitError) return; // Block if error
     const fridgeSource = pot.find(i => i.fromFridgeId);
     await db.logs.add({
       date: new Date().toISOString().split('T')[0],
@@ -211,7 +232,7 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <motion.div initial={{ x: 300, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="min-h-screen bg-slate-950 p-4 pb-28">
+    <motion.div initial={{ x: 300, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="min-h-screen bg-slate-950 p-4">
       
       {/* TOP HEADER */}
       <div className="flex items-center justify-between mb-6">
@@ -225,7 +246,6 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
           </h1>
         </div>
         
-        {/* RECIPE BUTTON */}
         {phase === 'prep' && (
           <button 
             onClick={() => setShowRecipes(true)} 
@@ -292,7 +312,7 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
             </AnimatePresence>
           </div>
 
-          <div className="space-y-3 pb-40"> 
+          <div className="space-y-3 pb-32"> 
             {pot.map((item) => (
               <div key={item.id} className="p-4 bg-slate-900/50 rounded-xl border border-slate-800/50 flex justify-between items-center">
                 <div className="flex-1">
@@ -301,7 +321,6 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
                     {item.fromFridgeId && <Package size={12} className="text-teal-500"/>}
                     {item.name}
                   </p>
-                  {/* ADDED KCAL AND FAT TO LIST ITEMS */}
                   <div className="flex gap-2 text-[9px] mt-1 font-mono">
                     <span className="text-white font-bold">{Math.round(item.calories * (item.measure === 'unit' ? item.weight : item.weight/100))} kcal</span>
                     <span className="text-teal-500">P:{Math.round(item.protein * (item.measure === 'unit' ? item.weight : item.weight/100))}</span>
@@ -324,10 +343,9 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
             {pot.length === 0 && <div className="text-center py-20 text-slate-700"><ChefHat size={48} className="mx-auto mb-4 opacity-10" /><p className="text-sm">The pot is empty.</p></div>}
           </div>
 
-          {/* TOTALS BAR - UPDATED TO 4 COLUMNS & LIFTED TO bottom-28 */}
           <div className="fixed bottom-28 left-0 w-full px-4 z-40 pointer-events-none">
              <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 p-4 rounded-2xl shadow-2xl pointer-events-auto">
-                <div className="grid grid-cols-4 gap-2 mb-4"> {/* Changed to 4 columns */}
+                <div className="grid grid-cols-4 gap-2 mb-4">
                     <div className="text-center"><p className="text-[10px] text-slate-500 uppercase font-bold">Cals</p><p className="text-lg font-bold text-white">{Math.round(totalCals)}</p></div>
                     <div className="text-center"><p className="text-[10px] text-slate-500 uppercase font-bold">Prot</p><p className="text-lg font-bold text-teal-500">{Math.round(totalProt)}g</p></div>
                     <div className="text-center"><p className="text-[10px] text-slate-500 uppercase font-bold">Carbs</p><p className="text-lg font-bold text-amber-500">{Math.round(totalCarb)}g</p></div>
@@ -404,7 +422,32 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
                            <Calculator size={14} className="inline mr-2"/>Scale (g)
                         </button>
                       </div>
-                      <input type="number" autoFocus className="w-full bg-slate-950 border border-amber-500/50 text-white font-bold text-5xl p-6 rounded-3xl text-center mb-6 outline-none" value={targetValue} onChange={(e) => setTargetValue(e.target.value)} />
+                      
+                      {/* INPUT WITH VALIDATION FEEDBACK */}
+                      <div className="relative mb-8 text-center">
+                         <input 
+                           type="number" 
+                           autoFocus 
+                           className={`w-full bg-slate-950 border text-white font-bold text-6xl p-6 rounded-[2rem] text-center outline-none transition-all ${limitError ? 'border-red-500 text-red-500' : 'border-amber-500/30 focus:border-amber-500'}`}
+                           value={targetValue} 
+                           onChange={(e) => setTargetValue(e.target.value)} 
+                         />
+                         
+                         {/* WARNING MESSAGE */}
+                         {limitError ? (
+                           <div className="absolute -bottom-8 left-0 w-full flex items-center justify-center gap-1.5 text-red-500">
+                              <AlertCircle size={12} />
+                              <span className="text-[10px] font-bold uppercase tracking-widest">
+                                Limit exceeded (Max: {limitError.max}{limitError.type === 'prot' ? 'g Prot' : 'g'})
+                              </span>
+                           </div>
+                         ) : (
+                           <span className="absolute -bottom-6 left-0 w-full text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest pointer-events-none">
+                              {distMode === 'goal' ? 'Target Protein (g)' : 'Total Weight (g)'}
+                           </span>
+                         )}
+                      </div>
+
                       <div className="bg-slate-950 p-8 rounded-3xl border border-slate-800 text-center mb-8">
                          <p className="text-4xl font-bold text-white mb-6 font-mono">{res.weight}g</p>
                          <div className="flex justify-around items-center border-t border-slate-900 pt-6">
@@ -413,7 +456,14 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
                             <div className="text-center"><p className="text-[10px] text-slate-600 font-bold uppercase">Fat</p><p className="text-white font-bold">{res.fat}g</p></div>
                          </div>
                       </div>
-                      <button onClick={logToDiary} className="w-full bg-teal-500 py-4 rounded-2xl text-slate-950 font-bold flex items-center justify-center gap-3"><CheckCircle size={24}/> Log Meal</button>
+                      
+                      <button 
+                        onClick={logToDiary} 
+                        disabled={!!limitError || !targetValue} // Disable if error exists
+                        className="w-full bg-teal-500 hover:bg-teal-400 disabled:opacity-20 disabled:cursor-not-allowed py-5 rounded-2xl text-slate-950 font-bold flex items-center justify-center gap-3 transition-all"
+                      >
+                        <CheckCircle size={24}/> Log Meal
+                      </button>
                    </div>
                 </motion.div>
             )}
