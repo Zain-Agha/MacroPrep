@@ -211,7 +211,7 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <motion.div initial={{ x: 300, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="min-h-screen bg-slate-950 p-4">
+    <motion.div initial={{ x: 300, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="min-h-screen bg-slate-950 p-4 pb-28">
       
       {/* TOP HEADER */}
       <div className="flex items-center justify-between mb-6">

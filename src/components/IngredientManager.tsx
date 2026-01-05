@@ -94,7 +94,7 @@ export default function IngredientManager({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="min-h-screen bg-slate-950 p-4 pb-20">
+    <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="min-h-screen bg-slate-950 p-4 pt-12 pb-20">
       
       {/* HEADER */}
       <div className="flex items-center gap-4 mb-8">
