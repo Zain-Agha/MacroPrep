@@ -5,7 +5,7 @@ import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { 
   Search, Plus, ChefHat, ArrowLeft, Trash2, Edit2, 
   Flame, Calculator, CheckCircle, Save, Package, Droplets, BookOpen, X,
-  Target, Utensils // <--- ADDED THESE
+  Target, Utensils
 } from "lucide-react";
 
 interface PotItem {
@@ -57,7 +57,6 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
     } else if (phase === 'cook') {
       setPhase('prep');
     } else {
-      // We are in Prep. If pot has items, warn user.
       if (pot.length > 0) {
         if (confirm("Discard this pot and return to dashboard?")) onBack();
       } else {
@@ -76,7 +75,7 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
     return unique.slice(0, 10);
   }, [query]);
 
-  // --- POT ACTIONS ---
+  // --- ACTIONS ---
   const addRawToPot = (ing: Ingredient) => {
     setPot([...pot, {
       id: Date.now(),
@@ -279,6 +278,7 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
                           {item.isFridge && <Package size={14}/>} {item.name}
                         </span>
                         <div className="flex gap-2 text-[9px] font-mono mt-1 opacity-60">
+                          <span className="text-white font-bold">{item.calories} kcal</span>
                           <span className="text-teal-500">P:{Math.round(item.protein)}</span>
                           <span className="text-amber-500">C:{Math.round(item.carbs)}</span>
                           <span className="text-slate-400">F:{Math.round(item.fat)}</span>
@@ -292,7 +292,7 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
             </AnimatePresence>
           </div>
 
-          <div className="space-y-3 pb-32"> 
+          <div className="space-y-3 pb-40"> 
             {pot.map((item) => (
               <div key={item.id} className="p-4 bg-slate-900/50 rounded-xl border border-slate-800/50 flex justify-between items-center">
                 <div className="flex-1">
@@ -301,9 +301,12 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
                     {item.fromFridgeId && <Package size={12} className="text-teal-500"/>}
                     {item.name}
                   </p>
+                  {/* ADDED KCAL AND FAT TO LIST ITEMS */}
                   <div className="flex gap-2 text-[9px] mt-1 font-mono">
-                    <span className="text-teal-500">P:{Math.round(item.protein * (item.measure === 'unit' ? item.weight : item.weight/100))}g</span>
-                    <span className="text-amber-500">C:{Math.round(item.carbs * (item.measure === 'unit' ? item.weight : item.weight/100))}g</span>
+                    <span className="text-white font-bold">{Math.round(item.calories * (item.measure === 'unit' ? item.weight : item.weight/100))} kcal</span>
+                    <span className="text-teal-500">P:{Math.round(item.protein * (item.measure === 'unit' ? item.weight : item.weight/100))}</span>
+                    <span className="text-amber-500">C:{Math.round(item.carbs * (item.measure === 'unit' ? item.weight : item.weight/100))}</span>
+                    <span className="text-slate-400">F:{Math.round(item.fat * (item.measure === 'unit' ? item.weight : item.weight/100))}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -321,16 +324,18 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
             {pot.length === 0 && <div className="text-center py-20 text-slate-700"><ChefHat size={48} className="mx-auto mb-4 opacity-10" /><p className="text-sm">The pot is empty.</p></div>}
           </div>
 
-          <div className="fixed bottom-24 left-0 w-full px-4 z-40 pointer-events-none">
+          {/* TOTALS BAR - UPDATED TO 4 COLUMNS & LIFTED TO bottom-28 */}
+          <div className="fixed bottom-28 left-0 w-full px-4 z-40 pointer-events-none">
              <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 p-4 rounded-2xl shadow-2xl pointer-events-auto">
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                    <div className="text-center"><p className="text-[10px] text-slate-500 uppercase font-bold">Protein</p><p className="text-lg font-bold text-teal-500">{Math.round(totalProt)}g</p></div>
+                <div className="grid grid-cols-4 gap-2 mb-4"> {/* Changed to 4 columns */}
+                    <div className="text-center"><p className="text-[10px] text-slate-500 uppercase font-bold">Cals</p><p className="text-lg font-bold text-white">{Math.round(totalCals)}</p></div>
+                    <div className="text-center"><p className="text-[10px] text-slate-500 uppercase font-bold">Prot</p><p className="text-lg font-bold text-teal-500">{Math.round(totalProt)}g</p></div>
                     <div className="text-center"><p className="text-[10px] text-slate-500 uppercase font-bold">Carbs</p><p className="text-lg font-bold text-amber-500">{Math.round(totalCarb)}g</p></div>
                     <div className="text-center"><p className="text-[10px] text-slate-500 uppercase font-bold">Fat</p><p className="text-lg font-bold text-slate-400">{Math.round(totalFat)}g</p></div>
                 </div>
                 
                 <div className="flex gap-2">
-                   <button onClick={() => setSaveMode(!saveMode)} disabled={pot.length === 0} className="bg-slate-800 text-teal-500 p-3 rounded-xl border border-slate-700 disabled:opacity-50 hover:bg-slate-700 transition-colors">
+                   <button onClick={() => setSaveMode(!saveMode)} disabled={pot.length === 0} className="bg-slate-800 text-teal-500 p-3 rounded-xl border border-slate-700 disabled:opacity-50">
                      <BookOpen size={20} />
                    </button>
                    <button onClick={() => setPhase('cook')} disabled={pot.length === 0} className="flex-1 bg-amber-500 hover:bg-amber-600 active:scale-95 transition-all text-black font-bold py-3 rounded-xl flex justify-center gap-2 shadow-lg">
@@ -351,7 +356,7 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
 
       {/* PHASE 2 & 3: LIFTED CONTENT */}
       {phase !== 'prep' && (
-         <div className="pb-24"> 
+         <div className="pb-28"> 
             {phase === 'cook' && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center pt-10 px-4">
                    <h2 className="text-xl font-bold text-white mb-2">Final Weight?</h2>
@@ -365,7 +370,6 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
                    />
                    
                    <div className="w-full max-w-xs space-y-4">
-                      {/* SAVE BUTTON FOR COOK PHASE */}
                       {!saveMode ? (
                         <button onClick={() => setSaveMode(true)} className="w-full bg-slate-800 text-teal-500 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 hover:bg-slate-700 transition-colors">
                            <BookOpen size={16} /> Save cooked version as Memory
