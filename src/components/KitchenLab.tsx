@@ -5,7 +5,7 @@ import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { 
   Search, Plus, ChefHat, ArrowLeft, Trash2, Edit2, 
   Flame, Calculator, CheckCircle, Save, Package, Droplets, BookOpen, X,
-  Target, Utensils, AlertCircle
+  Target, Utensils, AlertCircle // <--- ENSURED ALERT CIRCLE IS HERE
 } from "lucide-react";
 
 interface PotItem {
@@ -21,11 +21,20 @@ interface PotItem {
   fromFridgeId?: number; 
 }
 
-export default function KitchenLab({ onBack }: { onBack: () => void }) {
+export default function KitchenLab({ 
+  onBack, 
+  pot, 
+  setPot 
+}: { 
+  onBack: () => void, 
+  pot: PotItem[], 
+  setPot: (items: PotItem[]) => void 
+}) {
   // --- STATE ---
   const [phase, setPhase] = useState<'prep' | 'cook' | 'distribute'>('prep');
   const [query, setQuery] = useState("");
-  const [pot, setPot] = useState<PotItem[]>([]);
+  
+  // Note: 'pot' state is now passed via props (Lifted State)
   const [editingId, setEditingId] = useState<number | null>(null);
   
   // Memories / Recipes
@@ -58,7 +67,10 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
       setPhase('prep');
     } else {
       if (pot.length > 0) {
-        if (confirm("Discard this pot and return to dashboard?")) onBack();
+        if (confirm("Discard this pot and return to dashboard?")) {
+          setPot([]); // Clear pot on exit if confirmed
+          onBack();
+        }
       } else {
         onBack();
       }
@@ -167,10 +179,11 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
       createdAt: new Date(),
       measure: 'g'
     });
+    setPot([]); // Clear pot after saving
     onBack();
   };
 
-  // --- VALIDATION LOGIC ---
+  // --- VALIDATION LOGIC (NEW) ---
   const checkLimits = () => {
     const val = Number(targetValue);
     if (!val) return null;
@@ -191,8 +204,7 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
     const val = Number(targetValue);
     if (!val) return { weight: 0, cals: 0, prot: 0, carb: 0, fat: 0 };
     
-    // If input is invalid/over limit, we can clamp it or just use it (the button will be disabled anyway)
-    // Here we calculate normally so the user sees the insane numbers they are asking for
+    // Calculate even if over limit so user sees the insane number
     const w = distMode === 'goal' ? Math.round((val / totalProt) * cookedWeightNum) : val;
     const ratio = w / (cookedWeightNum || 1);
     
@@ -228,6 +240,7 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
         }
       }
     }
+    setPot([]); // Clear pot after eating
     onBack();
   };
 
@@ -321,6 +334,7 @@ export default function KitchenLab({ onBack }: { onBack: () => void }) {
                     {item.fromFridgeId && <Package size={12} className="text-teal-500"/>}
                     {item.name}
                   </p>
+                  {/* ADDED KCAL AND FAT TO LIST ITEMS */}
                   <div className="flex gap-2 text-[9px] mt-1 font-mono">
                     <span className="text-white font-bold">{Math.round(item.calories * (item.measure === 'unit' ? item.weight : item.weight/100))} kcal</span>
                     <span className="text-teal-500">P:{Math.round(item.protein * (item.measure === 'unit' ? item.weight : item.weight/100))}</span>

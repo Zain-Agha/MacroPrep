@@ -20,20 +20,38 @@ import DataLab from "./components/DataLab";
 import IngredientManager from "./components/IngredientManager";
 import Settings from "./components/Settings";
 
+// Define Types
 type Tab = 'dashboard' | 'kitchen' | 'fridge' | 'analytics' | 'settings';
+
+// Define the Pot Item structure so App knows how to hold it
+export interface PotItem {
+  id: number;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  weight: number; 
+  measure: 'g' | 'unit' | 'ml';
+  unitWeight?: number; 
+  fromFridgeId?: number; 
+}
 
 export default function App() {
   const user = useLiveQuery(() => db.user.toArray());
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   
-  // "Sub-views" are for screens that aren't on the main tab bar (like Ingredient Manager)
+  // "Sub-views"
   const [subView, setSubView] = useState<'none' | 'ingredients'>('none');
+
+  // --- LIFTED STATE: KITCHEN POT ---
+  // We hold the pot here so it survives tab switching
+  const [kitchenPot, setKitchenPot] = useState<PotItem[]>([]);
 
   useEffect(() => { seedDatabase(); }, []);
 
   if (!user) return <div className="p-10 text-white bg-slate-950 min-h-screen">Loading System...</div>;
   
-  // Show Onboarding if no user exists
   if (user.length === 0) {
     return <Onboarding onComplete={() => window.location.reload()} />;
   }
@@ -44,7 +62,6 @@ export default function App() {
     <div className="bg-slate-950 text-slate-50 min-h-screen flex flex-col">
       
       {/* MAIN CONTENT AREA */}
-      {/* Always add padding (pb-32) so content clears the fixed nav bar */}
       <div className="flex-1 overflow-y-auto pb-32">
         <AnimatePresence mode="wait">
           
@@ -71,7 +88,13 @@ export default function App() {
               )}
 
               {activeTab === 'kitchen' && (
-                <KitchenLab key="kitchen" onBack={() => setActiveTab('dashboard')} />
+                <KitchenLab 
+                  key="kitchen" 
+                  onBack={() => setActiveTab('dashboard')} 
+                  // Pass the lifted state down
+                  pot={kitchenPot}
+                  setPot={setKitchenPot}
+                />
               )}
 
               {activeTab === 'fridge' && (
@@ -90,7 +113,7 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      {/* BOTTOM TAB BAR (Always Visible now) */}
+      {/* BOTTOM TAB BAR */}
       {subView === 'none' && (
         <div className="fixed bottom-0 left-0 w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800 pb-safe pt-2 px-6 z-50">
           <div className="flex justify-between items-center">
